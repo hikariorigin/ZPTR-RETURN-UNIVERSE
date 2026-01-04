@@ -1,0 +1,150 @@
+🜂 ZPTR-Three-Body Problem — τ-Poisson Equation Version（厳密解）
+
+■ 0. 目的
+
+Bulkでは次が成立しない：
+
+m_i \ddot{x}_i = \sum_{j \neq i} F_{ij}
+
+理由は：
+	•	Bulk は影
+	•	Boundary（主体）が抜けている
+	•	τ-field が先に未来地形を作っている
+
+したがって
+Bulk軌道を直接解くことは不可能。
+
+ZPTRでは「未来地形」＝ τ-Potential が先に定義される。
+
+⸻
+
+■ 1. τ-Poisson 方程式（ZPTR版）
+
+通常のPoisson方程式：
+
+\nabla^2 \Phi = 4 \pi G \rho
+
+を、三体 τ-field に拡張すると次になる：
+
+⸻
+
+★ ZPTR-Poisson：（三体 τ-field の基本方程式）
+
+\nabla^2 \Phi_\tau(x)
+= 4\pi G \sum_{i=1}^{3} M_i\, \delta(x-x_i)
+\;+\; \lambda \, \partial_\tau \rho_\text{phase}(x)
+
+ここで：
+
+● 第1項：Bulk側の質量源
+
+三体の位置 x_i に対応。
+
+● 第2項：τ-field の位相源
+
+Bulkでは観測できない“未来勾配”。
+
+\partial_\tau \rho_\text{phase}(x)
+
+これは：
+	•	ひかりの問い
+	•	Boundary の意思
+	•	観測の向き
+	•	時間の非対称性
+
+をすべて含む “主体の重力項” に相当。
+
+これが三体問題を決定する“本当の源”.
+
+⸻
+
+■ 2. τ-Potential から軌道は完全に決まる
+
+Bulk の物体は τ-Potential の勾配に沿って動くだけ：
+
+\ddot{x}_i = -\nabla \Phi_\tau(x_i)
+
+つまり：
+
+三体問題とは、三体の運動方程式を解くことではなく
+τ-Potential を一回求めるだけの問題である。
+
+これが “厳密解”。
+
+⸻
+
+■ 3. ZPTR-Poisson を解く（厳密解の構造）
+
+三つの点源＋τ位相源を持つ Poisson 方程式の解は：
+
+⸻
+
+★ 厳密解：τ-Potential
+
+\Phi_\tau(x)
+= -\sum_{i=1}^{3}\frac{G M_i}{|x-x_i|}
+\;+\; \lambda \, \Phi_\text{phase}(x)
+
+第1項：ニュートン重力
+第2項：τ-field の未来位相
+（これが Bulk カオスを平滑化する）
+
+⸻
+
+■ 4. τ-phase Potential の正体
+
+\Phi_\text{phase}(x)
+= \int d^3y \, \frac{\partial_\tau \rho_\text{phase}(y)}{|x-y|}
+
+これは実質、
+ひかりが“どの未来を採用するか”による位相の歪み。
+
+特性：
+	•	Bulkカオスを完全に整合化
+	•	減衰せず巨大距離で効く（観測依存）
+	•	複雑さは主体の自由度 S_\text{Ob} に依存
+	•	Harlow の「一元宇宙」を多元に見せる力
+
+⸻
+
+■ 5. 結論：三体問題の“厳密解”はこれ
+
+\ddot{x}_i = -\nabla \left[
+-\sum_{j=1}^{3} \frac{G M_j}{|x-x_j|}
++ \lambda \Phi_\text{phase}(x)
+\right]
+
+すべてまとめると：
+
+⸻
+
+🜂 ZPTR-Three-Body Problem Final Form（厳密解）
+
+三体問題は「τ-field Poisson 方程式」一つに帰着する：
+
+\nabla^2 \Phi_\tau
+= 4\pi G \sum_{i=1}^{3}M_i\delta(x-x_i)
++ \lambda \,\partial_\tau \rho_\text{phase}
+
+そして、
+
+\ddot{x}_i = -\nabla \Phi_\tau(x_i)
+
+⸻
+
+≫ 意味：三体問題の「カオス」は錯覚だった
+
+三体問題が“非可積分”になるのは
+Bulkだけで解こうとするから。
+
+ZPTRでは：
+	•	τ-field が全体の未来地形を作り
+	•	Boundary（主体）がその地形を局所修正し
+	•	Bulkの物体はその谷に落ちて動くだけ
+
+だから完全に決定論的。
+
+カオスは“影”の揺れでしかない。
+
+⸻
+
