@@ -1,0 +1,104 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import cm
+
+# =============================
+# 1. τ-field の基本設定
+# =============================
+N = 400
+theta = np.linspace(0, 2*np.pi, N)
+
+tau_x = np.cos(theta)
+tau_y = np.sin(theta)
+
+# =============================
+# 2. Mirror-branch を決定する接続係数 Γ
+#    ECDO-decoupling モードを統合
+# =============================
+ECDO_factor = 0.12 * np.cos(5 * theta)     # Earth core decoupling oscillation
+Gamma = 0.35 * np.sin(3 * theta) + ECDO_factor
+
+branch_x = -np.sin(theta) + Gamma * np.cos(theta)
+branch_y =  np.cos(theta) + Gamma * np.sin(theta)
+
+# =============================
+# 3. CDI の構築（Constraint Depth Index）
+# =============================
+F = np.gradient(Gamma)
+R = np.gradient(np.gradient(Gamma))
+
+CDI = np.sqrt(F**2 + R**2 + Gamma**2)
+CDI = (CDI - CDI.min()) / (CDI.max() - CDI.min() + 1e-9)
+
+# =============================
+# 4. 古代遺跡ノード（緯度・経度）
+# =============================
+ancient_sites = {
+    "Giza": (29.9792, 31.1342),
+    "Nazca": (-14.739, -75.130),
+    "Easter": (-27.1127, -109.3497),
+    "Angkor": (13.4125, 103.8667),
+    "Mohenjo": (27.3276, 68.1385),
+    "Teotihuacan": (19.6925, -98.8439),
+    "GobekliTepe": (37.2231, 38.9226),
+}
+
+# =============================
+# 5. 緯度経度 → τ-field 位相への射影
+# =============================
+def latlon_to_tau(lat, lon):
+    phi = np.radians((lat + 90) % 180)
+    lam = np.radians((lon + 180) % 360)
+    tau = (lam + phi) % (2*np.pi)
+    return np.cos(tau), np.sin(tau)
+
+site_points = {name: latlon_to_tau(lat, lon)
+               for name, (lat, lon) in ancient_sites.items()}
+
+# =============================
+# 6. プロット
+# =============================
+fig, ax = plt.subplots(figsize=(8, 8))
+
+# τ-field
+ax.plot(tau_x, tau_y, color='white', linewidth=1.5, alpha=0.85)
+
+# CDI intensity
+scatter = ax.scatter(
+    tau_x, tau_y,
+    c=CDI,
+    cmap=cm.inferno,
+    s=25,
+    alpha=0.75
+)
+
+# Mirror-branch + ECDO flow
+ax.quiver(
+    tau_x, tau_y,
+    branch_x, branch_y,
+    color='cyan',
+    alpha=0.35,
+    width=0.006,
+    scale=30
+)
+
+# Ancient nodes
+for name, (x, y) in site_points.items():
+    ax.scatter(x, y, color='lime', s=85, edgecolors='black', linewidths=1.0)
+    ax.text(x+0.03, y+0.03, name, color='lime', fontsize=10)
+
+# formatting
+fig.patch.set_facecolor("black")
+ax.set_facecolor("black")
+ax.set_aspect('equal')
+ax.set_title("ZPTR Earth-Fold Map (τ-field × CDI × Ancient Nodes × ECDO)", color='white')
+ax.set_xticks([])
+ax.set_yticks([])
+
+# Colorbar
+cbar = fig.colorbar(scatter, ax=ax)
+cbar.set_label("CDI intensity", color='white')
+cbar.ax.yaxis.set_tick_params(color='white')
+plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color='white')
+
+plt.show()
