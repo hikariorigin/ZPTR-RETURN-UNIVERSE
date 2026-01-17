@@ -1,0 +1,72 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+
+# ===============================
+# 1. 球面メッシュ（Earth）
+# ===============================
+N = 200
+theta = np.linspace(0, 2*np.pi, N)      # 経度
+phi   = np.linspace(-np.pi/2, np.pi/2, N)  # 緯度
+theta_grid, phi_grid = np.meshgrid(theta, phi)
+
+# 球面座標 → 3D
+R = 1.0
+x = R * np.cos(phi_grid) * np.cos(theta_grid)
+y = R * np.cos(phi_grid) * np.sin(theta_grid)
+z = R * np.sin(phi_grid)
+
+# ===============================
+# 2. τ-field（Earth 位相）
+# ===============================
+# τ = 経度＋緯度で決まる位相
+tau = (theta_grid + phi_grid) % (2*np.pi)
+
+# カラーマップ：τ-field
+tau_norm = (tau - tau.min()) / (tau.max() - tau.min())
+
+# ===============================
+# 3. Mirror-branch（接続係数 Γ）
+# ===============================
+Gamma = 0.35 * np.sin(3 * tau)
+
+# 球面上のベクトル（接線方向）
+u = -np.sin(theta_grid) * np.cos(phi_grid) + Gamma * (-np.sin(phi_grid))
+v =  np.cos(theta_grid) * np.cos(phi_grid) + Gamma * (-np.sin(phi_grid))
+w =  np.sin(phi_grid) * 0 + Gamma * np.cos(phi_grid)
+
+# 正規化
+norm = np.sqrt(u*u + v*v + w*w) + 1e-9
+u, v, w = u/norm, v/norm, w/norm
+
+# ===============================
+# 4. 3D 描画
+# ===============================
+fig = plt.figure(figsize=(10, 10))
+ax = fig.add_subplot(111, projection='3d')
+
+# Earth surface with τ-field color
+ax.plot_surface(
+    x, y, z,
+    facecolors=cm.hsv(tau_norm),
+    rstride=3, cstride=3,
+    linewidth=0, antialiased=False, shade=False
+)
+
+# Mirror-branch vectors（間引いて描く）
+step = 12
+ax.quiver(
+    x[::step, ::step], y[::step, ::step], z[::step, ::step],
+    u[::step, ::step], v[::step, ::step], w[::step, ::step],
+    color='cyan', length=0.12, alpha=0.6, normalize=True
+)
+
+# Style
+ax.set_title("ZPTR Earth τ-field v2 (3D Globe + Mirror-branch)", fontsize=14)
+ax.set_xlim([-1.2, 1.2])
+ax.set_ylim([-1.2, 1.2])
+ax.set_zlim([-1.2, 1.2])
+ax.set_axis_off()
+
+plt.show()
