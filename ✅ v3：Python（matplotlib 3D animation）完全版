@@ -1,0 +1,104 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import FuncAnimation
+
+# ======================================
+# 1. Earth sphere mesh
+# ======================================
+N = 120
+theta = np.linspace(0, 2*np.pi, N)        # longitude
+phi   = np.linspace(-np.pi/2, np.pi/2, N) # latitude
+theta_g, phi_g = np.meshgrid(theta, phi)
+
+R = 1.0
+x = R * np.cos(phi_g) * np.cos(theta_g)
+y = R * np.cos(phi_g) * np.sin(theta_g)
+z = R * np.sin(phi_g)
+
+# ======================================
+# 2. Time-dependent Γ(t) (ECDO-driven)
+# ======================================
+def Gamma_field(t):
+    # ECDO decoupling term（高周波揺らぎ）
+    ECDO = 0.15 * np.cos(5 * theta_g + t*2.5)
+    # 反転項：t = π で完全反転
+    flip = np.cos(t)
+    return 0.35 * np.sin(3 * (theta_g + phi_g)) * flip + ECDO
+
+
+# ======================================
+# 3. Magnetic dipole vector（地磁気）
+# ======================================
+def magnetic_dipole(t):
+    # t = 0 → 正常（北）
+    # t = π → 反転（南）
+    mx = 0
+    my = np.sin(t)  # 途中で弱まる
+    mz = np.cos(t)  # 反転
+    return np.array([mx, my, mz])
+
+
+# ======================================
+# 4. Visualization (animation)
+# ======================================
+fig = plt.figure(figsize=(10, 10))
+ax = fig.add_subplot(111, projection='3d')
+
+def update(frame):
+    ax.clear()
+
+    t = frame / 60 * np.pi  # 0 → π（反転）
+
+    # --- τ-field Colors ---
+    tau = (theta_g + phi_g + t) % (2*np.pi)
+    tau_norm = (tau - tau.min()) / (tau.max() - tau.min())
+
+    # --- Mirror-branch (Γ) ---
+    Gamma = Gamma_field(t)
+
+    # Tangent vector field
+    u = -np.sin(theta_g) * np.cos(phi_g) + Gamma * (-np.sin(phi_g))
+    v =  np.cos(theta_g) * np.cos(phi_g) + Gamma * (-np.sin(phi_g))
+    w =  Gamma * np.cos(phi_g)
+
+    # Normalize
+    norm = np.sqrt(u*u + v*v + w*w) + 1e-9
+    u, v, w = u/norm, v/norm, w/norm
+
+    # --- Earth surface ---
+    ax.plot_surface(
+        x, y, z,
+        rstride=2, cstride=2,
+        facecolors=cm.hsv(tau_norm),
+        linewidth=0, shade=False, alpha=0.95
+    )
+
+    # --- Mirror-branch vectors ---
+    step = 10
+    ax.quiver(
+        x[::step, ::step], y[::step, ::step], z[::step, ::step],
+        u[::step, ::step], v[::step, ::step], w[::step, ::step],
+        color='cyan', length=0.12, alpha=0.5
+    )
+
+    # --- Magnetic dipole vector ---
+    dip = magnetic_dipole(t)
+    ax.quiver(
+        0,0,0, dip[0], dip[1], dip[2],
+        color="yellow", linewidth=4, length=1.3
+    )
+
+    # --- Text ---
+    ax.set_title(f"ZPTR Earth Engine v3 — Geomagnetic Reversal (t={t:.2f})",
+                 color='white')
+    ax.set_axis_off()
+    ax.set_xlim([-1.3, 1.3])
+    ax.set_ylim([-1.3, 1.3])
+    ax.set_zlim([-1.3, 1.3])
+    fig.patch.set_facecolor("black")
+    ax.set_facecolor("black")
+
+ani = FuncAnimation(fig, update, frames=60, interval=120)
+plt.show()
