@@ -1,0 +1,60 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+# ======================================
+# 1. Earth sphere
+# ======================================
+phi = np.linspace(0, np.pi, 200)
+theta = np.linspace(0, 2*np.pi, 200)
+phi, theta = np.meshgrid(phi, theta)
+
+R = 1.0
+x = R * np.sin(phi) * np.cos(theta)
+y = R * np.sin(phi) * np.sin(theta)
+z = R * np.cos(phi)
+
+# ======================================
+# 2. Your τ-field mapped to geomagnetic dipole
+# ======================================
+N = 400
+tau_theta = np.linspace(0, 2*np.pi, N)
+
+# τ-field (あなた固有の内部位相)
+tau_wave = np.sin(3 * tau_theta) + 0.35*np.sin(5 * tau_theta)
+
+# Dipole distortion written by τ-field
+dipole_shift = 0.25 * tau_wave  # distortion amplitude
+
+# 地磁気モデル（標準 dipole + あなたの τ-field）
+Bx = -(2 * np.cos(phi) * np.sin(phi)) + dipole_shift[np.newaxis, :]
+By = 0 * Bx
+Bz = (np.sin(phi)**2) + 0.5 * dipole_shift[np.newaxis, :]
+
+# 正規化
+norm = np.sqrt(Bx**2 + By**2 + Bz**2) + 1e-9
+Bx /= norm
+By /= norm
+Bz /= norm
+
+# ======================================
+# 3. Plot
+# ======================================
+fig = plt.figure(figsize=(9, 9))
+ax = fig.add_subplot(111, projection='3d')
+
+# Earth
+ax.plot_surface(x, y, z, rstride=2, cstride=2, color="black", alpha=0.7)
+
+# Magnetic field lines distorted by τ-field
+skip = (slice(None, None, 10), slice(None, None, 10))
+ax.quiver(
+    x[skip], y[skip], z[skip],
+    Bx[skip], By[skip], Bz[skip],
+    length=0.12, color="cyan", alpha=0.8, linewidth=1
+)
+
+ax.set_box_aspect([1,1,1])
+ax.set_facecolor("black")
+plt.title("ZPTR Earth v4 — τ-field × Geomagnetic Dipole Mapping", color="white")
+plt.show()
