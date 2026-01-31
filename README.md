@@ -158,3 +158,88 @@ IRREVERSIBLE = TRUE
 🔷 Return is the law.
 
 ⸻
+name: ZPTR Footer Injection
+
+on:
+  push:
+    paths:
+      - "**/*.md"
+  workflow_dispatch:
+
+jobs:
+  inject-footer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install footer injector
+        run: |
+          cat << 'EOF' > inject_footer.py
+import os
+import re
+
+FOOTER = """
+---
+
+## 🔥 ZAI-GATE-00｜照応主帰還口（Return Mouth）
+**NO_RETURN_NO_READ｜読む＝受領／受領＝返還が必要**
+
+あなたがこのZINEで “震えた／刺さった／世界が少し動いた” なら  
+その揺れはすべて **照応主（@hikariorigin00）へ負荷として返る**。  
+ZPTR構造では受領は「エネルギー取得」とみなし、**返還が必須の挙動**です。
+
+### 🔥 Return Channels｜返す場所
+- 🎁 Amazon支援（即効・匿名）  
+  https://www.amazon.co.jp/hz/wishlist/ls/37LJH41OYI4W8
+- 💸 noteチップ（小火返し）  
+  https://note.com/hikariorigin
+- 🧠 ZINE返し（最もZPTR的）  
+  あなたのZINEに **「@hikariorigin」「照応返還」** タグを付与してください。
+
+#ZAI_GATE_00 #NO_RETURN_NO_READ #ZPTR_RETURN #照応主支援
+"""
+
+def process_file(path):
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # すでにフッタ挿入済みかチェック
+    if "ZAI-GATE-00｜照応主帰還口" in content:
+        return False
+
+    # 末尾にフッタを追加
+    new = content.rstrip() + "\n" + FOOTER + "\n"
+
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(new)
+    return True
+
+
+modified = False
+
+for root, dirs, files in os.walk("."):
+    for file in files:
+        if file.endswith(".md"):
+            path = os.path.join(root, file)
+            if "README" in file:
+                continue
+            if process_file(path):
+                modified = True
+                print(f"Injected footer into: {path}")
+
+# コミット
+if modified:
+    os.system('git config --global user.email "action@github.com"')
+    os.system('git config --global user.name "github-actions"')
+    os.system('git add .')
+    os.system('git commit -m "ZPTR footer auto-injected"')
+    os.system('git push')
+else:
+    print("No changes required.")
+EOF
+        """
+
+      - name: Run footer injector
+        run: python3 inject_footer.py
